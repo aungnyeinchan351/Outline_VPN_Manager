@@ -1,0 +1,37 @@
+echo "Updating your package list......"
+
+#$api_url=grep -oP 'https://[^"]+' log.txt
+#sudo sed -i "s|define('OUTLINE_API_URL',.*|define('OUTLINE_API_URL', '$api_url');|" "$CONFIG_FILE"
+
+sudo apt update > /dev/null 2>&1
+echo "Installing Web Server...."
+sudo apt install nginx php-fpm php-curl -y > /dev/null 2>&1
+sudo mkdir -p /var/www/vpn-manager
+sudo chown -R $USER:$USER /var/www/vpn-manager
+echo "Configuring Web Server....."
+sudo tee /etc/nginx/sites-available/vpn-manager > /dev/null <<EOF
+server {
+    listen 80;
+    server_name _;
+    root /var/www/vpn-manager;
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php-fpm.sock;
+    }
+}
+EOF
+
+sudo ln -s /etc/nginx/sites-available/vpn-manager /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo systemctl restart nginx
+echo "Creating Panel...."
+sudo mv * /var/www/vpn-manager
+cd /var/www/vpn-manager
+sudo chown www-data:www-data key_history.json
+sudo chown www-data:www-data .
