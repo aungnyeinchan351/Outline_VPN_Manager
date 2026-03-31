@@ -75,6 +75,7 @@ sudo chown www-data:www-data key_history.json
 ```
 sudo chown www-data:www-data config.php
 ```
+```
 sudo chown www-data:www-data .
 ```
 
