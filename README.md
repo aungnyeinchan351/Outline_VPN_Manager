@@ -47,6 +47,14 @@ server {
     location / {
         try_files $uri $uri/ =404;
     }
+    location = /config.php {
+        deny all;
+        return 404;
+    }
+    location = /key_history.json {
+        deny all;
+        return 404;
+    }
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
