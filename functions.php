@@ -10,8 +10,18 @@ function checkLogin() {
 }
 
 // Ensure these match your actual server details
-define('OUTLINE_API_URL', 'https://.............');
-define('HISTORY_FILE', 'key_history.json');
+define('OUTLINE_API_URL', 'https://3.0.43.43:41079/_Z0Qmza1Wey1YPwJWhEXTw'); // [cite: 2]
+define('HISTORY_FILE', 'key_history.json'); // [cite: 2]
+
+// Helper to convert names like "Zin Yaw" to "zinyaw"
+function slugify($text) {
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text);
+    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
+    $text = preg_replace('~[^-\w]+~', '', $text);
+    $text = trim($text, '-');
+    $text = preg_replace('~-+~', '-', $text);
+    return strtolower($text);
+}
 
 function apiRequest($endpoint, $method = 'GET', $payload = null) {
     $ch = curl_init(OUTLINE_API_URL . $endpoint);
@@ -35,43 +45,66 @@ function generateOutlineKey($name, $limitGb, $expireDate) {
     apiRequest("/access-keys/$id/name", 'PUT', ['name' => $name]);
     apiRequest("/access-keys/$id/data-limit", 'PUT', json_encode(["limit" => ["bytes" => $limitGb * 1000000000]]));
 
+    $slug = slugify($name);
+    $filename = $slug . ".php";
+
     $history = getFullHistory();
     $history[$id] = [
         'name' => $name, 
         'limit' => $limitGb * 1000000000, 
         'url' => $res['accessUrl'], 
         'date' => date('Y-m-d H:i'),
-        'expire_date' => $expireDate // New Field
+        'expire_date' => $expireDate,
+        'client_file' => $filename // Store filename for later reference
     ];
-    file_put_contents(HISTORY_FILE, json_encode($history));
+    file_put_contents(HISTORY_FILE, json_encode($history, JSON_PRETTY_PRINT));
+
+    // Create the individual client file automatically
+    $content = "<?php \$keyId = '$id'; include 'details_template.php'; ?>";
+    file_put_contents($filename, $content);
+
     return $res['accessUrl'];
 }
 
 function deleteOutlineKey($id) {
-    apiRequest("/access-keys/$id", 'DELETE');
     $history = getFullHistory();
     if (isset($history[$id])) {
+        // Delete the physical .php file if it exists
+        if (!empty($history[$id]['client_file']) && file_exists($history[$id]['client_file'])) {
+            unlink($history[$id]['client_file']);
+        }
+        
+        apiRequest("/access-keys/$id", 'DELETE');
         unset($history[$id]);
-        file_put_contents(HISTORY_FILE, json_encode($history));
+        file_put_contents(HISTORY_FILE, json_encode($history, JSON_PRETTY_PRINT));
     }
 }
 
-// Automatically delete keys that have passed their expiration date
 function checkAndCleanExpiredKeys() {
     $history = getFullHistory();
     $today = date('Y-m-d');
     $changed = false;
 
     foreach ($history as $id => $data) {
-        if (isset($data['expire_date']) && $data['expire_date'] < $today) {
-            deleteOutlineKey($id);
+        // If the expire date is in the past
+        if (isset($data['expire_date']) && !empty($data['expire_date']) && $data['expire_date'] < $today) {
+            
+            // 1. Delete the physical .php file
+            if (!empty($data['client_file']) && file_exists($data['client_file'])) {
+                unlink($data['client_file']);
+            }
+            
+            // 2. Delete from Outline API
+            apiRequest("/access-keys/$id", 'DELETE');
+            
+            // 3. Remove from history array
+            unset($history[$id]);
             $changed = true;
         }
     }
-    
-    // Refresh history after cleaning
+
     if ($changed) {
-        return getFullHistory();
+        file_put_contents(HISTORY_FILE, json_encode($history, JSON_PRETTY_PRINT));
     }
     return $history;
 }
@@ -84,24 +117,3 @@ function getLiveUsage() {
     $metrics = apiRequest('/metrics/transfer');
     return $metrics['bytesTransferredByUserId'] ?? [];
 }
-
-// Logic for generating key
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['generate'])) {
-    generateOutlineKey($_POST['key_name'], $_POST['data_limit'], $_POST['expire_date']);
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
-
-// Logic for deleting
-if (isset($_POST['delete_id'])) { 
-    deleteOutlineKey($_POST['delete_id']); 
-    header("Location: " . $_SERVER['PHP_SELF']);
-    exit();
-}
-
-// Run the auto-cleaner every time the page loads
-checkAndCleanExpiredKeys();
-
-$history = array_reverse(getFullHistory(), true);
-$usageData = getLiveUsage();
-?>
