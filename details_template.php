@@ -48,7 +48,8 @@ $percent = min(100, ($used / $limit) * 100);
     <div style="text-align: left; margin-top: 20px;">
         <label style="font-size: 0.8rem; color: #666;">Access Key:</label>
         <textarea id="clientKey" readonly style="height: 70px; font-size: 0.7rem;"><?php echo htmlspecialchars($data['url']); ?></textarea>
-        <button onclick="copyKey()" class="btn-generate">Copy Key</button>
+        <button onclick="copyKey()" class="btn-generate">Copy Key</button><br>
+        <a href="test.php"><button class="btn-generate">Test Network Speed</button></a>
     </div>
 
     <p style="margin-top: 30px; font-size: 0.7rem; color: #aaa;">Managed by Zin Yaw</p>
