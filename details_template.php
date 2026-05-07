@@ -176,5 +176,93 @@ async function updateConnectionDetails() {
 
 document.addEventListener('DOMContentLoaded', updateConnectionDetails);
 </script>
+<div id="adModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-ad" onclick="closeAd()">&times;</span>
+        <img src="commercial.png" alt="Special Offer" class="ad-image">
+        <div class="ad-footer">
+            <p>Special Promotion for VPN Users</p>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Background Overlay */
+.modal-overlay {
+    display: flex;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.85);
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+}
+
+/* Container for the Ad Image */
+.modal-content {
+    position: relative;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 12px;
+    max-width: 90%;
+    width: 400px;
+    text-align: center;
+    animation: fadeInScale 0.4s ease-out;
+}
+
+.ad-image {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+}
+
+.ad-footer {
+    padding: 10px 0;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Close Button (X) */
+.close-ad {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    background: #e74c3c;
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    line-height: 28px;
+    text-align: center;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+@keyframes fadeInScale {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+</style>
+
+<script>
+// Function to close the popup
+function closeAd() {
+    document.getElementById('adModal').style.display = 'none';
+}
+
+// Optional: Close popup if user clicks anywhere outside the image
+window.onclick = function(event) {
+    var modal = document.getElementById('adModal');
+    if (event.target == modal) {
+        modal.style.display = 'none';
+    }
+}
+</script>
 </body>
 </html>
