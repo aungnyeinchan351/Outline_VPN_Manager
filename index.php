@@ -5,6 +5,7 @@ checkAndCleanExpiredKeys();
 
 date_default_timezone_set('Asia/Bangkok');
 
+// Determine Greeting
 $hour = date('H');
 if ($hour >= 5 && $hour < 12) {
     $greeting = "Good Morning";
@@ -18,12 +19,14 @@ if ($hour >= 5 && $hour < 12) {
 
 $currentDateTime = date('l, F j, Y | g:i A');
 
+// Handle Form Submission
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['generate'])) {
     generateOutlineKey($_POST['key_name'], $_POST['data_limit'], $_POST['expire_date']);
     header("Location: index.php");
     exit();
 }
 
+// Handle Deletion
 if (isset($_POST['delete_id'])) { 
     deleteOutlineKey($_POST['delete_id']); 
     header("Location: index.php");
@@ -47,7 +50,6 @@ $usageData = getLiveUsage();
             --border-color: #dddddd;
             --input-bg: #ffffff;
             --switch-bg: #ccc;
-            --switch-circle: #ffffff;
         }
 
         [data-theme="dark"] {
@@ -58,7 +60,6 @@ $usageData = getLiveUsage();
             --border-color: #444444;
             --input-bg: #3d3d3d;
             --switch-bg: #27ae60;
-            --switch-circle: #ffffff;
         }
 
         body {
@@ -77,7 +78,6 @@ $usageData = getLiveUsage();
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        /* Top Row for Toggle */
         .top-bar {
             display: flex;
             justify-content: flex-end;
@@ -91,9 +91,7 @@ $usageData = getLiveUsage();
             width: 50px;
             height: 24px;
         }
-
         .switch input { opacity: 0; width: 0; height: 0; }
-
         .slider {
             position: absolute;
             cursor: pointer;
@@ -102,7 +100,6 @@ $usageData = getLiveUsage();
             transition: .4s;
             border-radius: 24px;
         }
-
         .slider:before {
             position: absolute;
             content: "";
@@ -112,11 +109,9 @@ $usageData = getLiveUsage();
             transition: .4s;
             border-radius: 50%;
         }
-
         input:checked + .slider { background-color: #27ae60; }
         input:checked + .slider:before { transform: translateX(26px); }
 
-        /* Greeting Section */
         .header-welcome {
             text-align: left;
             margin-bottom: 20px;
@@ -127,7 +122,16 @@ $usageData = getLiveUsage();
         .header-welcome p { margin: 5px 0 0 0; font-size: 0.85rem; color: var(--secondary-text); }
 
         input, #clientSearch { background-color: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
-        .history-item { background-color: var(--card-bg); border: 1px solid var(--border-color); margin-bottom: 10px; padding: 15px; border-radius: 8px; }
+        .history-item { background-color: var(--card-bg); border: 1px solid var(--border-color); margin-bottom: 15px; padding: 15px; border-radius: 8px; position: relative; }
+        
+        .client-link {
+            font-size: 0.75rem;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -146,10 +150,10 @@ $usageData = getLiveUsage();
 
     <h2>Outline VPN Manager</h2>
     <form method="POST">
-        <input type="text" name="key_name" placeholder="Client Name" required style="width:100%; padding:10px; margin-bottom:10px;">
-        <input type="number" step="0.1" name="data_limit" placeholder="Limit (GB)" required style="width:100%; padding:10px; margin-bottom:10px;">
+        <input type="text" name="key_name" placeholder="Client Name" required style="width:100%; padding:10px; margin-bottom:10px; border-radius: 6px;">
+        <input type="number" step="0.1" name="data_limit" placeholder="Limit (GB)" required style="width:100%; padding:10px; margin-bottom:10px; border-radius: 6px;">
         <label style="display:block; margin-bottom:5px; font-size:0.8rem;">Expire Date:</label>
-        <input type="date" name="expire_date" required style="width:100%; padding:10px; margin-bottom:10px;">
+        <input type="date" name="expire_date" required style="width:100%; padding:10px; margin-bottom:10px; border-radius: 6px;">
         <button type="submit" name="generate" class="btn-generate">Generate Key</button>
     </form>
 
@@ -167,7 +171,16 @@ $usageData = getLiveUsage();
                 $clientName = htmlspecialchars($data['name']);
             ?>
                 <div class="history-item client-card" data-name="<?php echo strtolower($clientName); ?>">
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="delete_id" value="<?php echo $id; ?>">
+                        <button class="delete-btn" onclick="return confirm('Delete key and client file?')">Delete</button>
+                    </form>
                     <strong><?php echo $clientName; ?></strong>
+                    
+                    <a href="<?php echo $data['client_file']; ?>" target="_blank" class="client-link">
+                        View Page: /<?php echo $data['client_file']; ?>
+                    </a>
+
                     <div class="progress-container" style="background:#eee; height:10px; border-radius:5px; margin:10px 0;">
                         <div style="width: <?php echo $percent; ?>%; background: #27ae60; height:100%; border-radius:5px;"></div>
                     </div>
