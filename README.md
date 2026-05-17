@@ -91,3 +91,37 @@ sudo chown www-data:www-data .
 
 type your **Static IP address** in your browser and access to your web.
 The default password is **456**.
+
+
+## More steps for stable VPN server
+### Create swap file for low RAM VPS
+```
+sudo fallocate -l 4G /swapfile
+```
+```
+sudo chmod 600 /swapfile
+```
+```
+sudo mkswap /swapfile
+```
+```
+sudo swapon /swapfile
+```
+```
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+### Optimize the TCP BBR congestion Control
+```
+echo "net.core.default_qdisc=fq" | sudo tee -a /etc/sysctl.conf
+```
+```
+echo "net.ipv4.tcp_congestion_control=bbr" | sudo tee -a /etc/sysctl.conf
+```
+```
+sudo sysctl -p
+```
+Then verif changes...
+```
+sysctl net.ipv4.tcp_congestion_control
+```
