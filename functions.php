@@ -10,7 +10,7 @@ function checkLogin() {
 }
 
 // Ensure these match your actual server details
-define('OUTLINE_API_URL', 'https://3.0.43.43:41079/_Z0Qmza1Wey1YPwJWhEXTw'); // [cite: 2]
+define('OUTLINE_API_URL', 'https://43.249.33.196:33580/F8T5cvP1R_20_hF68iczxA'); // [cite: 2]
 define('HISTORY_FILE', 'key_history.json'); // [cite: 2]
 
 // Helper to convert names like "Zin Yaw" to "zinyaw"
@@ -35,6 +35,34 @@ function apiRequest($endpoint, $method = 'GET', $payload = null) {
     $res = curl_exec($ch);
     curl_close($ch);
     return json_decode($res, true);
+}
+
+function sendTelegramNotification($name, $startDate, $expireDate, $limitGb, $accessKey) {
+    $message = "🚀 *New VPN Key Created* 🚀\n\n";
+    $message .= "👤 *Name:* " . htmlspecialchars($name) . "\n";
+    $message .= "📊 *Data Limit:* " . $limitGb . " GB\n";
+    $message .= "📅 *Starting Date:* " . $startDate . "\n";
+    $message .= "⏳ *Expire Date:* " . $expireDate . "\n\n";
+    $message .= "🔑 *Access Key:*\n`" . $accessKey . "`";
+
+    $url = "https://api.telegram.org/bot" . 8156309670:AAG4fPYHGMVfX00pUigSRSBjQSL2YOUB6kU . "/sendMessage";
+    
+    $payload = [
+        'chat_id' => -1003991854990,
+        'text' => $message,
+        'parse_mode' => 'Markdown' // Allows formatting like bolding and code blocks for easy copying
+    ];
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($payload));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    
+    return $response;
 }
 
 function generateOutlineKey($name, $limitGb, $expireDate) {
@@ -63,6 +91,7 @@ function generateOutlineKey($name, $limitGb, $expireDate) {
     $content = "<?php \$keyId = '$id'; include 'details_template.php'; ?>";
     file_put_contents($filename, $content);
 
+    sendTelegramNotification($name, $startDate, $expireDate, $limitGb, $res['accessUrl']);
     return $res['accessUrl'];
 }
 
