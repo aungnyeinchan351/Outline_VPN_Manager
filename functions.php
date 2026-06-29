@@ -45,7 +45,7 @@ function sendTelegramNotification($name, $startDate, $expireDate, $limitGb, $acc
     $message .= "⏳ *Expire Date:* " . $expireDate . "\n\n";
     $message .= "🔑 *Access Key:*\n`" . $accessKey . "`";
 
-    $url = "https://api.telegram.org/bot" . 8156309670:AAG4fPYHGMVfX00pUigSRSBjQSL2YOUB6kU . "/sendMessage";
+    $url = "https://api.telegram.org/bot" . "8156309670:AAG4fPYHGMVfX00pUigSRSBjQSL2YOUB6kU" . "/sendMessage";
     
     $payload = [
         'chat_id' => -1003991854990,
@@ -75,6 +75,8 @@ function generateOutlineKey($name, $limitGb, $expireDate) {
 
     $slug = slugify($name);
     $filename = $slug . ".php";
+
+    $startDate = date('Y-m-d H:i');
 
     $history = getFullHistory();
     $history[$id] = [
